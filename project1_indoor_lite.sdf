@@ -1,0 +1,2370 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.9">
+  <world name="tuwaiq_p1_challenge">
+    <gravity>0 0 -9.81</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <physics name="step" type="ignored">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <scene>
+      <ambient>0.35 0.44 0.62 1</ambient>
+      <background>0.04 0.07 0.16 1</background>
+      <shadows>false</shadows>
+      <grid>false</grid>
+    </scene>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics" />
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands" />
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster" />
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact" />
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu" />
+    <plugin filename="gz-sim-air-pressure-system" name="gz::sim::systems::AirPressure" />
+    <plugin filename="gz-sim-magnetometer-system" name="gz::sim::systems::Magnetometer" />
+    <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat" />
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>47.397971057728974</latitude_deg>
+      <longitude_deg>8.546163739800146</longitude_deg>
+      <elevation>488.0</elevation>
+    </spherical_coordinates>
+    <light name="arena_soft_light" type="directional">
+      <pose>0 0 22 0 0 0</pose>
+      <direction>-0.25 0.22 -0.93</direction>
+      <diffuse>0.75 0.83 0.98 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <cast_shadows>false</cast_shadows>
+    </light>
+    <model name="arena_floor">
+      <static>true</static>
+      <pose>0 0 0 0 0 0.0000000</pose>
+      <link name="link">
+        <visual name="ground_visual">
+          <pose>39.00000 0.00000 -0.15000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>112 47 0.3</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.035 0.060 0.11 1</ambient>
+            <diffuse>0.035 0.060 0.11 1</diffuse>
+          </material>
+        </visual>
+        <collision name="ground_collision">
+          <pose>39.00000 0.00000 -0.15000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>112 47 0.3</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="racing_lane">
+      <static>true</static>
+      <pose>0 0 0 0 0 0.0000000</pose>
+      <link name="link">
+        <visual name="tarmac_0_visual">
+          <pose>2.40000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_0_-1_visual">
+          <pose>2.40000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_0_1_visual">
+          <pose>2.40000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_0_visual">
+          <pose>2.40000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_1_visual">
+          <pose>7.20000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_1_-1_visual">
+          <pose>7.20000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_1_1_visual">
+          <pose>7.20000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_2_visual">
+          <pose>12.00000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_2_-1_visual">
+          <pose>12.00000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_2_1_visual">
+          <pose>12.00000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_2_visual">
+          <pose>12.00000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_3_visual">
+          <pose>16.80000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_3_-1_visual">
+          <pose>16.80000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_3_1_visual">
+          <pose>16.80000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_4_visual">
+          <pose>21.60000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_4_-1_visual">
+          <pose>21.60000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_4_1_visual">
+          <pose>21.60000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_4_visual">
+          <pose>21.60000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_5_visual">
+          <pose>26.40000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_5_-1_visual">
+          <pose>26.40000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_5_1_visual">
+          <pose>26.40000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_6_visual">
+          <pose>31.20000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_6_-1_visual">
+          <pose>31.20000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_6_1_visual">
+          <pose>31.20000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_6_visual">
+          <pose>31.20000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_7_visual">
+          <pose>36.00000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_7_-1_visual">
+          <pose>36.00000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_7_1_visual">
+          <pose>36.00000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_8_visual">
+          <pose>40.80000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_8_-1_visual">
+          <pose>40.80000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_8_1_visual">
+          <pose>40.80000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_8_visual">
+          <pose>40.80000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_9_visual">
+          <pose>45.60000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_9_-1_visual">
+          <pose>45.60000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_9_1_visual">
+          <pose>45.60000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_10_visual">
+          <pose>50.40000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_10_-1_visual">
+          <pose>50.40000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_10_1_visual">
+          <pose>50.40000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_10_visual">
+          <pose>50.40000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_11_visual">
+          <pose>55.20000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_11_-1_visual">
+          <pose>55.20000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_11_1_visual">
+          <pose>55.20000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_12_visual">
+          <pose>60.00000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_12_-1_visual">
+          <pose>60.00000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_12_1_visual">
+          <pose>60.00000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_12_visual">
+          <pose>60.00000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_13_visual">
+          <pose>64.80000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_13_-1_visual">
+          <pose>64.80000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_13_1_visual">
+          <pose>64.80000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_14_visual">
+          <pose>69.60000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_14_-1_visual">
+          <pose>69.60000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_14_1_visual">
+          <pose>69.60000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_14_visual">
+          <pose>69.60000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_15_visual">
+          <pose>74.40000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_15_-1_visual">
+          <pose>74.40000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_15_1_visual">
+          <pose>74.40000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="tarmac_16_visual">
+          <pose>79.20000 0.00000 0.01200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.85 8.7 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.085 0.110 0.160 1</ambient>
+            <diffuse>0.085 0.110 0.160 1</diffuse>
+          </material>
+        </visual>
+        <visual name="curb_16_-1_visual">
+          <pose>79.20000 -4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="curb_16_1_visual">
+          <pose>79.20000 4.42000 0.04000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>4.65 0.13 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="dash_16_visual">
+          <pose>79.20000 0.00000 0.03600 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>2.45 0.085 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.12 0.62 0.91 1</ambient>
+            <diffuse>0.12 0.62 0.91 1</diffuse>
+            <emissive>0.12 0.62 0.91 1</emissive>
+          </material>
+        </visual>
+        <visual name="takeoff_pad_visual">
+          <pose>0.00000 0.00000 0.04500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>3.4 3.4 0.035</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="landing_pad_visual">
+          <pose>83.00000 0.00000 0.04500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>3.5 3.5 0.035</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1.00 0.68 0.08 1</ambient>
+            <diffuse>1.00 0.68 0.08 1</diffuse>
+            <emissive>1.00 0.68 0.08 1</emissive>
+          </material>
+        </visual>
+        <visual name="finish_checker_0_visual">
+          <pose>81.30000 -3.50000 0.06200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.8 0.92 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.025 0.040 0.10 1</ambient>
+            <diffuse>0.025 0.040 0.10 1</diffuse>
+          </material>
+        </visual>
+        <visual name="finish_checker_1_visual">
+          <pose>81.30000 -2.50000 0.06200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.8 0.92 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+          </material>
+        </visual>
+        <visual name="finish_checker_2_visual">
+          <pose>81.30000 -1.50000 0.06200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.8 0.92 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.025 0.040 0.10 1</ambient>
+            <diffuse>0.025 0.040 0.10 1</diffuse>
+          </material>
+        </visual>
+        <visual name="finish_checker_3_visual">
+          <pose>81.30000 -0.50000 0.06200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.8 0.92 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+          </material>
+        </visual>
+        <visual name="finish_checker_4_visual">
+          <pose>81.30000 0.50000 0.06200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.8 0.92 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.025 0.040 0.10 1</ambient>
+            <diffuse>0.025 0.040 0.10 1</diffuse>
+          </material>
+        </visual>
+        <visual name="finish_checker_5_visual">
+          <pose>81.30000 1.50000 0.06200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.8 0.92 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+          </material>
+        </visual>
+        <visual name="finish_checker_6_visual">
+          <pose>81.30000 2.50000 0.06200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.8 0.92 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.025 0.040 0.10 1</ambient>
+            <diffuse>0.025 0.040 0.10 1</diffuse>
+          </material>
+        </visual>
+        <visual name="finish_checker_7_visual">
+          <pose>81.30000 3.50000 0.06200 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.8 0.92 0.02</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="gate_01">
+      <static>true</static>
+      <pose>14.0 0.0 2.25 0 0 0.0535203</pose>
+      <link name="link">
+        <visual name="top_visual">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="top_collision">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="bottom_visual">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="bottom_collision">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_-1_visual">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_-1_collision">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_-1_visual">
+          <pose>0.00000 -2.09000 -1.88500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 0.73</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_-1_collision">
+          <pose>0.00000 -2.09000 -1.88500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 0.73</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_-1_visual">
+          <pose>0.00000 -2.09000 -2.15000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_-1_collision">
+          <pose>0.00000 -2.09000 -2.15000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_1_visual">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_1_collision">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_1_visual">
+          <pose>0.00000 2.09000 -1.88500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 0.73</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_1_collision">
+          <pose>0.00000 2.09000 -1.88500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 0.73</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_1_visual">
+          <pose>0.00000 2.09000 -2.15000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_1_collision">
+          <pose>0.00000 2.09000 -2.15000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="LED_header_visual">
+          <pose>0.02000 0.00000 1.63000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.07 2.5 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="gate_02">
+      <static>true</static>
+      <pose>28.0 1.5 3.35 0 0 -0.0517395</pose>
+      <link name="link">
+        <visual name="top_visual">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="top_collision">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="bottom_visual">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="bottom_collision">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_-1_visual">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_-1_collision">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_-1_visual">
+          <pose>0.00000 -2.09000 -2.43500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 1.83</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_-1_collision">
+          <pose>0.00000 -2.09000 -2.43500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 1.83</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_-1_visual">
+          <pose>0.00000 -2.09000 -3.25000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_-1_collision">
+          <pose>0.00000 -2.09000 -3.25000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_1_visual">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_1_collision">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_1_visual">
+          <pose>0.00000 2.09000 -2.43500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 1.83</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_1_collision">
+          <pose>0.00000 2.09000 -2.43500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 1.83</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_1_visual">
+          <pose>0.00000 2.09000 -3.25000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_1_collision">
+          <pose>0.00000 2.09000 -3.25000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="LED_header_visual">
+          <pose>0.02000 0.00000 1.63000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.07 2.5 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="gate_03">
+      <static>true</static>
+      <pose>42.0 -1.45 2.05 0 0 0.0107139</pose>
+      <link name="link">
+        <visual name="top_visual">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="top_collision">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="bottom_visual">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="bottom_collision">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_-1_visual">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_-1_collision">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_-1_visual">
+          <pose>0.00000 -2.09000 -1.78500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 0.5299999999999998</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_-1_collision">
+          <pose>0.00000 -2.09000 -1.78500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 0.5299999999999998</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_-1_visual">
+          <pose>0.00000 -2.09000 -1.95000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_-1_collision">
+          <pose>0.00000 -2.09000 -1.95000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_1_visual">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_1_collision">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_1_visual">
+          <pose>0.00000 2.09000 -1.78500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 0.5299999999999998</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_1_collision">
+          <pose>0.00000 2.09000 -1.78500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 0.5299999999999998</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_1_visual">
+          <pose>0.00000 2.09000 -1.95000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_1_collision">
+          <pose>0.00000 2.09000 -1.95000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="LED_header_visual">
+          <pose>0.02000 0.00000 1.63000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.07 2.5 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="gate_04">
+      <static>true</static>
+      <pose>56.0 1.8 3.65 0 0 0.1735419</pose>
+      <link name="link">
+        <visual name="top_visual">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="top_collision">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="bottom_visual">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="bottom_collision">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_-1_visual">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_-1_collision">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_-1_visual">
+          <pose>0.00000 -2.09000 -2.58500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 2.13</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_-1_collision">
+          <pose>0.00000 -2.09000 -2.58500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 2.13</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_-1_visual">
+          <pose>0.00000 -2.09000 -3.55000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_-1_collision">
+          <pose>0.00000 -2.09000 -3.55000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_1_visual">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_1_collision">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_1_visual">
+          <pose>0.00000 2.09000 -2.58500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 2.13</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_1_collision">
+          <pose>0.00000 2.09000 -2.58500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 2.13</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_1_visual">
+          <pose>0.00000 2.09000 -3.55000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_1_collision">
+          <pose>0.00000 2.09000 -3.55000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="LED_header_visual">
+          <pose>0.02000 0.00000 1.63000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.07 2.5 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="gate_05">
+      <static>true</static>
+      <pose>70.0 -0.5 2.55 0 0 -0.0641974</pose>
+      <link name="link">
+        <visual name="top_visual">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="top_collision">
+          <pose>0.00000 0.00000 1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="bottom_visual">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="bottom_collision">
+          <pose>0.00000 0.00000 -1.52000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 3.8 0.16</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_-1_visual">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_-1_collision">
+          <pose>0.00000 -1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_-1_visual">
+          <pose>0.00000 -2.09000 -2.03500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 1.0299999999999998</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_-1_collision">
+          <pose>0.00000 -2.09000 -2.03500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 1.0299999999999998</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_-1_visual">
+          <pose>0.00000 -2.09000 -2.45000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_-1_collision">
+          <pose>0.00000 -2.09000 -2.45000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="frame_1_visual">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.03 0.78 1.00 1</ambient>
+            <diffuse>0.03 0.78 1.00 1</diffuse>
+            <emissive>0.03 0.78 1.00 1</emissive>
+          </material>
+        </visual>
+        <collision name="frame_1_collision">
+          <pose>0.00000 1.82000 0.00000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.16 0.16 3.06</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="pole_1_visual">
+          <pose>0.00000 2.09000 -2.03500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 1.0299999999999998</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="pole_1_collision">
+          <pose>0.00000 2.09000 -2.03500 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.14 0.14 1.0299999999999998</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="foot_1_visual">
+          <pose>0.00000 2.09000 -2.45000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <collision name="foot_1_collision">
+          <pose>0.00000 2.09000 -2.45000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.46 0.46 0.2</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="LED_header_visual">
+          <pose>0.02000 0.00000 1.63000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.07 2.5 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="course_markers">
+      <static>true</static>
+      <pose>0 0 0 0 0 0.0000000</pose>
+      <link name="link">
+        <visual name="guide_1_-1_visual">
+          <pose>14.00000 -3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_1_1_visual">
+          <pose>14.00000 3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_2_-1_visual">
+          <pose>28.00000 -3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_2_1_visual">
+          <pose>28.00000 3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_3_-1_visual">
+          <pose>42.00000 -3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_3_1_visual">
+          <pose>42.00000 3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_4_-1_visual">
+          <pose>56.00000 -3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_4_1_visual">
+          <pose>56.00000 3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.66 0.25 1.00 1</ambient>
+            <diffuse>0.66 0.25 1.00 1</diffuse>
+            <emissive>0.66 0.25 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_5_-1_visual">
+          <pose>70.00000 -3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="guide_5_1_visual">
+          <pose>70.00000 3.75000 0.05400 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>1.2 0.17 0.04</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.95 0.98 1.00 1</ambient>
+            <diffuse>0.95 0.98 1.00 1</diffuse>
+            <emissive>0.95 0.98 1.00 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="arena_walls">
+      <static>true</static>
+      <pose>0 0 0 0 0 0.0000000</pose>
+      <link name="link">
+        <visual name="wall_-1_visual">
+          <pose>40.00000 -22.70000 5.75000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>114 0.28 11.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.045 0.09 0.21 1</ambient>
+            <diffuse>0.045 0.09 0.21 1</diffuse>
+          </material>
+        </visual>
+        <visual name="rail_-1_visual">
+          <pose>40.00000 -10.50000 1.10000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>110 0.12 2.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.32 0.43 1</ambient>
+            <diffuse>0.25 0.32 0.43 1</diffuse>
+          </material>
+        </visual>
+        <visual name="column_-1_0_visual">
+          <pose>-10.00000 -21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_-1_0_visual">
+          <pose>-10.00000 -20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_-1_1_visual">
+          <pose>13.00000 -21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_-1_1_visual">
+          <pose>13.00000 -20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_-1_2_visual">
+          <pose>36.00000 -21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_-1_2_visual">
+          <pose>36.00000 -20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_-1_3_visual">
+          <pose>59.00000 -21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_-1_3_visual">
+          <pose>59.00000 -20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_-1_4_visual">
+          <pose>82.00000 -21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_-1_4_visual">
+          <pose>82.00000 -20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_-1_5_visual">
+          <pose>105.00000 -21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_-1_5_visual">
+          <pose>105.00000 -20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="wall_1_visual">
+          <pose>40.00000 22.70000 5.75000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>114 0.28 11.5</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.045 0.09 0.21 1</ambient>
+            <diffuse>0.045 0.09 0.21 1</diffuse>
+          </material>
+        </visual>
+        <visual name="rail_1_visual">
+          <pose>40.00000 10.50000 1.10000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>110 0.12 2.2</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.32 0.43 1</ambient>
+            <diffuse>0.25 0.32 0.43 1</diffuse>
+          </material>
+        </visual>
+        <visual name="column_1_0_visual">
+          <pose>-10.00000 21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_1_0_visual">
+          <pose>-10.00000 20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_1_1_visual">
+          <pose>13.00000 21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_1_1_visual">
+          <pose>13.00000 20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_1_2_visual">
+          <pose>36.00000 21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_1_2_visual">
+          <pose>36.00000 20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_1_3_visual">
+          <pose>59.00000 21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_1_3_visual">
+          <pose>59.00000 20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_1_4_visual">
+          <pose>82.00000 21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_1_4_visual">
+          <pose>82.00000 20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+        <visual name="column_1_5_visual">
+          <pose>105.00000 21.80000 5.70000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.28 0.28 11.4</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.25 0.35 0.48 1</ambient>
+            <diffuse>0.25 0.35 0.48 1</diffuse>
+          </material>
+        </visual>
+        <visual name="light_1_5_visual">
+          <pose>105.00000 20.40000 9.60000 0.00000 0.00000 0.00000</pose>
+          <geometry>
+            <box>
+              <size>0.6 1.9 0.15</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.62 0.84 1.00 1</ambient>
+            <diffuse>0.62 0.84 1.00 1</diffuse>
+            <emissive>0.62 0.84 1.00 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <gui fullscreen="false">
+      <camera name="user_camera">
+        <pose>-15 -21 17 0 0.33 0.6</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+  </world>
+</sdf>
