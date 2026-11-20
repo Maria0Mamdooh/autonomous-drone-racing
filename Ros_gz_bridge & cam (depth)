@@ -1,1 +1,13 @@
+# Ros2 Bridge:
+
+source /opt/ros/humble/setup.bash
 ros2 run ros_gz_bridge parameter_bridge '/world/tuwaiq_p1_challenge/model/x500_depth_0/link/camera_link/sensor/IMX214/image@sensor_msgs/msg/Image[gz.msgs.Image' --ros-args -r '/world/tuwaiq_p1_challenge/model/x500_depth_0/link/camera_link/sensor/IMX214/image:=/camera/depth/image_raw'
+
+/////////////////////////////////////
+
+# running depth cam:
+
+###  NEW TERRMINAL ###
+
+source /opt/ros/humble/setup.bash
+ros2 run rqt_image_view rqt_image_view
