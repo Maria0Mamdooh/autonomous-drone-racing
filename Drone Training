@@ -1,0 +1,1010 @@
+  // BIG PICTURE: 
+  //Gazebo camera → YOLO (vision-env) → UDP :5005 → race_controller (drone-env) → MAVSDK → PX4 → Gazebo
+  //We use two Python environments because Gazebo's image library needs an old protobuf while MAVSDK needs a new one.
+
+| base package |
+sudo apt update
+sudo apt install -y python3-pip python3-venv python3-dev git nano build-essential zip
+sudo apt install -y python3-gz-transport13 python3-gz-msgs10
+  // installs Python tooling and the Gazebo Python bindings
+
+  | drone-env |
+python3 -m venv ~/drone-env
+source ~/drone-env/bin/activate
+pip install --upgrade pip
+pip install "mavsdk==3.10.2" aioconsole numpy
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install stable-baselines3 gymnasium tensorboard matplotlib
+echo "alias drone='source ~/drone-env/bin/activate'" >> ~/.bashrc
+  //creates the environment that talks to the drone
+
+  | vision-env | // runs the YOLO model.
+python3 -m venv --system-site-packages ~/vision-env
+source ~/vision-env/bin/activate
+pip install --upgrade pip
+pip install "protobuf<=3.20.3" opencv-python numpy
+pip install --no-deps onnxruntime flatbuffers packaging
+python3 -c "from gz.transport13 import Node; from gz.msgs10.image_pb2 import Image; import cv2, onnxruntime; print('vision-env OK')"
+python3 -c "import google.protobuf as p; print('protobuf', p.__version__)"
+  //Success = vision-env OK
+
+| Run the simulator as usual | 
+
+| check the camera topic |
+gz topic -l | grep "camera/image"
+//Expected: /world/(YOUR WORLD'S NAME)/model/x500_mono_cam_0/link/camera_link/sensor/camera/image
+
+|||| First flight test: takeoff_wait.py (drone-env) ||||
+mkdir -p ~/autonomous-drone-racing/{control,vision,rl,results}
+
+cat > ~/autonomous-drone-racing/control/takeoff_wait.py << 'EOF'
+import asyncio
+import time
+from mavsdk import System
+
+TARGET_ALT = 2.0
+TIMEOUT = 120
+
+
+async def run():
+    drone = System()
+    await drone.connect(system_address="udpin://0.0.0.0:14540")
+
+    async for state in drone.core.connection_state():
+        if state.is_connected:
+            print("-- Connected")
+            break
+
+    async for health in drone.telemetry.health():
+        if health.is_global_position_ok and health.is_home_position_ok:
+            break
+
+    print("-- Arming")
+    await drone.action.arm()
+    print("-- Taking off")
+    await drone.action.takeoff()
+
+    t0 = time.time()
+    last = 0.0
+    async for pos in drone.telemetry.position():
+        alt = pos.relative_altitude_m
+        now = time.time() - t0
+        if now - last >= 1.0:
+            last = now
+            print(f"wall={now:.0f}s altitude={alt:.2f} m", flush=True)
+        if alt >= TARGET_ALT - 0.3:
+            print("-- Reached target altitude")
+            break
+        if now > TIMEOUT:
+            print("-- Timeout")
+            break
+
+    await asyncio.sleep(10)
+    print("-- Landing")
+    await drone.action.land()
+    async for in_air in drone.telemetry.in_air():
+        if not in_air:
+            break
+    print("Done")
+
+
+asyncio.run(run())
+EOF
+//////////////////////////
+| run |
+source ~/drone-env/bin/activate
+python3 ~/autonomous-drone-racing/control/takeoff_wait.py
+//What it does: connects to PX4 through MAVSDK, arms, takes off, waits until the drone is really at ~2 m ...
+// hovers 10 s, then lands. Success = Reached target altitude and Done.
+
+|  Read a camera frame: grab_frame.py (vision-env) |
+cat > ~/autonomous-drone-racing/vision/grab_frame.py << 'EOF'
+import time
+import numpy as np
+import cv2
+from gz.transport13 import Node
+from gz.msgs10.image_pb2 import Image
+
+TOPIC = "/world/tuwaiq_p1_challenge/model/x500_mono_cam_0/link/camera_link/sensor/camera/image"
+frame = {"img": None}
+
+
+def on_image(msg):
+    h, w = msg.height, msg.width
+    data = np.frombuffer(msg.data, dtype=np.uint8)
+    frame["img"] = data.reshape(h, w, 3)  # RGB
+    frame["fmt"] = msg.pixel_format_type
+
+
+node = Node()
+if not node.subscribe(Image, TOPIC, on_image):
+    raise SystemExit("subscribe failed")
+
+print("Waiting for image...")
+for _ in range(100):
+    if frame["img"] is not None:
+        break
+    time.sleep(0.1)
+
+if frame["img"] is None:
+    raise SystemExit("No image received")
+
+img = frame["img"]
+print("Got image:", img.shape, "format:", frame.get("fmt"))
+cv2.imwrite("/tmp/frame.png", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+print("Saved /tmp/frame.png")
+EOF
+cd ~/autonomous-drone-racing/vision
+source ~/vision-env/bin/activate
+python3 grab_frame.py
+xdg-open /tmp/frame.png
+//What it does: subscribes to the Gazebo camera topic, waits for one frame, converts RGB to BGR (OpenCV's order) and saves it to /tmp/frame.png.
+//Success = Got image: (960, 1280, 3) and you can see the gates in the picture.
+
+  |  Training data for YOLO |
+| hover_for_dataset.py (drone-env) |
+cat > ~/autonomous-drone-racing/control/hover_for_dataset.py << 'EOF'
+import asyncio
+import os
+import sys
+import time
+from mavsdk import System
+
+MAX_S = float(sys.argv[1]) if len(sys.argv) > 1 else 2400
+DONE = "/tmp/dataset_done"
+
+
+async def run():
+    drone = System()
+    await drone.connect(system_address="udpin://0.0.0.0:14540")
+    async for s in drone.core.connection_state():
+        if s.is_connected:
+            break
+    async for h in drone.telemetry.health():
+        if h.is_global_position_ok and h.is_home_position_ok:
+            break
+
+    if os.path.exists(DONE):
+        os.remove(DONE)
+    await drone.action.arm()
+    await drone.action.takeoff()
+    t0 = time.time()
+    async for p in drone.telemetry.position():
+        if p.relative_altitude_m >= 1.7:
+            break
+        if time.time() - t0 > 150:
+            print("takeoff timeout")
+            break
+    print("-- HOVERING: now start the dataset generator", flush=True)
+
+    t0 = time.time()
+    while not os.path.exists(DONE) and time.time() - t0 < MAX_S:
+        await asyncio.sleep(1)
+    print("-- Landing")
+    await drone.action.land()
+    async for in_air in drone.telemetry.in_air():
+        if not in_air:
+            break
+    print("Done")
+
+
+asyncio.run(run())
+EOF
+//What it does: takes off to ~2 m and holds position while the dataset generator moves the gates around in front of the camera. 
+//When the generator finishes it creates /tmp/dataset_done, and this script lands the drone.
+
+| gen_dataset_world.py (vision-env) |
+cat > ~/autonomous-drone-racing/vision/gen_dataset_world.py << 'EOF'
+import math
+import os
+import random
+import subprocess
+import sys
+import time
+import numpy as np
+import cv2
+from gz.transport13 import Node
+from gz.msgs10.image_pb2 import Image
+from gz.msgs10.pose_v_pb2 import Pose_V
+
+WORLD = "tuwaiq_p1_challenge"
+IMG_TOPIC = f"/world/{WORLD}/model/x500_mono_cam_0/link/camera_link/sensor/camera/image"
+DYN_TOPIC = f"/world/{WORLD}/dynamic_pose/info"
+POSE_TOPIC = f"/world/{WORLD}/pose/info"
+OUT = os.path.expanduser("~/autonomous-drone-racing/dataset_world")
+DONE = "/tmp/dataset_done"
+N_BASE = int(sys.argv[1]) if len(sys.argv) > 1 else 10
+VARIANTS = 4
+
+FX = FY = 539.9363
+CX0, CY0 = 640.0, 480.0
+CAM_OFF = np.array([0.12, 0.03, 0.242])
+DRONE = "x500_mono_cam_0"
+GATES = ["gate_01", "gate_02", "gate_03", "gate_04", "gate_05"]
+ORIG = {
+    "gate_01": (14.0, 0.0, 2.25, 0.0535203),
+    "gate_02": (28.0, 1.5, 3.35, -0.0517395),
+    "gate_03": (42.0, -1.45, 2.05, 0.0107139),
+    "gate_04": (56.0, 1.8, 3.65, 0.1735419),
+    "gate_05": (70.0, -0.5, 2.55, -0.0641974),
+}
+# gate frame bars (center, size) in the gate's local frame
+BARS = [((0, 0, 1.52), (0.16, 3.8, 0.16)), ((0, 0, -1.52), (0.16, 3.8, 0.16)),
+        ((0, -1.82, 0), (0.16, 0.16, 3.06)), ((0, 1.82, 0), (0.16, 0.16, 3.06))]
+OUTER_HX, OUTER_HY, OUTER_Z0, OUTER_Z1 = 0.08, 1.9, -1.6, 1.65
+
+rng = random.Random(1)
+img_state = {"img": None, "n": 0}
+drone_pose = {}
+
+
+def on_image(msg):
+    img_state["img"] = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, 3)
+    img_state["n"] += 1
+
+
+def on_pose(msg):
+    for p in msg.pose:
+        if p.name == DRONE:
+            drone_pose["p"] = (
+                np.array([p.position.x, p.position.y, p.position.z]),
+                np.array([p.orientation.w, p.orientation.x, p.orientation.y, p.orientation.z]))
+
+
+def wait_for(cond, timeout):
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        if cond():
+            return True
+        time.sleep(0.1)
+    return False
+
+
+def quat_R(q):
+    w, x, y, z = q / np.linalg.norm(q)
+    return np.array([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
+
+
+def Rz(a):
+    c, s = math.cos(a), math.sin(a)
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+
+def camera_pose():
+    t, q = drone_pose["p"]
+    R = quat_R(q)
+    return t + R @ CAM_OFF, R
+
+
+def box_pts(c, s):
+    hx, hy, hz = s[0] / 2, s[1] / 2, s[2] / 2
+    return np.array([[c[0] + a * hx, c[1] + b * hy, c[2] + d * hz]
+                     for a in (-1, 1) for b in (-1, 1) for d in (-1, 1)])
+
+
+def project(pw, tc, Rc, s):
+    pc = (pw - tc) @ Rc
+    d = pc[:, 0]
+    safe = np.where(np.abs(d) < 1e-6, 1e-6, d)
+    u = (CX0 - FX * pc[:, 1] / safe) * s
+    v = (CY0 - FY * pc[:, 2] / safe) * s
+    return np.stack([u, v], 1), d
+
+
+def analyze(pos, yaw, tc, Rc, W, H):
+    s = W / 1280.0
+    loc = box_pts((0, 0, (OUTER_Z0 + OUTER_Z1) / 2),
+                  (2 * OUTER_HX, 2 * OUTER_HY, OUTER_Z1 - OUTER_Z0))
+    uv, d = project(pos + loc @ Rz(yaw).T, tc, Rc, s)
+    if np.all(d <= 0.3):
+        return "invisible", None
+    if np.any(d <= 0.3):
+        return "ambiguous", None
+    x0, y0 = uv.min(0)
+    x1, y1 = uv.max(0)
+    area = max((x1 - x0) * (y1 - y0), 1e-6)
+    bx0, by0, bx1, by1 = max(x0, 0), max(y0, 0), min(x1, W), min(y1, H)
+    if bx1 <= bx0 or by1 <= by0:
+        return "invisible", None
+    frac = ((bx1 - bx0) * (by1 - by0)) / area
+    if frac < 0.02:
+        return "invisible", None
+    if frac >= 0.6 and (bx1 - bx0) >= 20 * s and (by1 - by0) >= 20 * s:
+        return "ok", {"box": (bx0, by0, bx1, by1), "frac": frac, "depth": float(d.mean())}
+    return "ambiguous", None
+
+
+def bar_mask(pos, yaw, tc, Rc, W, H):
+    s = W / 1280.0
+    m = np.zeros((H, W), np.uint8)
+    for c, sz in BARS:
+        uv, d = project(pos + box_pts(c, sz) @ Rz(yaw).T, tc, Rc, s)
+        if np.any(d <= 0.3):
+            continue
+        hull = cv2.convexHull(uv.astype(np.float32))
+        cv2.fillConvexPoly(m, np.round(hull).astype(np.int32), 255)
+    return m
+
+
+def run_set_pose(reqs):
+    procs = []
+    for name, (pos, yaw) in reqs.items():
+        req = (f'name: "{name}", position: {{x: {pos[0]:.4f}, y: {pos[1]:.4f}, z: {pos[2]:.4f}}}, '
+               f'orientation: {{w: {math.cos(yaw / 2):.6f}, z: {math.sin(yaw / 2):.6f}}}')
+        procs.append(subprocess.Popen(
+            ["gz", "service", "-s", f"/world/{WORLD}/set_pose",
+             "--reqtype", "gz.msgs.Pose", "--reptype", "gz.msgs.Boolean",
+             "--timeout", "3000", "--req", req],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True))
+    ok = True
+    for p in procs:
+        try:
+            out, _ = p.communicate(timeout=30)
+            ok = ok and ("true" in out)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            ok = False
+    return ok
+
+
+def key(v):
+    return (tuple(np.round(v[0], 4)), round(float(v[1]), 5))
+
+
+def make_config(tc, Rc):
+    yaw0 = math.atan2(Rc[1, 0], Rc[0, 0])
+    c, s_ = math.cos(yaw0), math.sin(yaw0)
+    r = rng.random()
+    n = 0 if r < 0.10 else (1 if r < 0.55 else (2 if r < 0.85 else 3))
+    cfg = {}
+    d = math.exp(rng.uniform(math.log(2.5), math.log(25)))
+    for name in rng.sample(GATES, n):
+        if d > 45:
+            break
+        lat = rng.uniform(-0.8, 0.8) * 1.185 * d
+        x = tc[0] + d * c - lat * s_
+        y = max(-8.5, min(8.5, tc[1] + d * s_ + lat * c))
+        z = rng.uniform(1.8, 4.0)
+        yaw = yaw0 + math.radians(rng.uniform(-65, 65))
+        cfg[name] = (np.array([x, y, z]), yaw)
+        d += rng.uniform(6, 16)
+    parked = [g for g in GATES if g not in cfg]
+    for i, g in enumerate(parked):
+        cfg[g] = (np.array([-40.0 - 8 * i, 0.0, 2.0]), 0.0)
+    return cfg
+
+
+def grab_after(min_new=6, timeout=40):
+    n0, t0 = img_state["n"], time.time()
+    while img_state["n"] < n0 + min_new:
+        if time.time() - t0 > timeout:
+            return None
+        time.sleep(0.03)
+    return img_state["img"].copy()
+
+
+def recolor(bgr, masks):
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    colored = (hsv[..., 2] > 110) & (hsv[..., 1] > 80)
+    for m in masks:
+        sel = (cv2.dilate(m, np.ones((3, 3), np.uint8)) > 0) & colored
+        if rng.random() < 0.12:      # white / gray
+            s, f = rng.randint(0, 30), rng.uniform(0.4, 1.0)
+        else:                        # random vivid color
+            s, f = rng.randint(130, 255), rng.uniform(0.55, 1.0)
+        hsv[..., 0][sel] = rng.randint(0, 179)
+        hsv[..., 1][sel] = s
+        hsv[..., 2][sel] = np.clip(hsv[..., 2][sel].astype(np.float32) * f, 0, 255).astype(np.uint8)
+    return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+
+def jitter(bgr):
+    a, b = rng.uniform(0.7, 1.3), rng.uniform(-20, 20)
+    out = np.clip(bgr.astype(np.float32) * a + b, 0, 255)
+    sigma = rng.uniform(0, 6)
+    if sigma > 0.5:
+        out += np.random.default_rng(rng.randint(0, 10 ** 6)).normal(0, sigma, out.shape)
+    return np.clip(out, 0, 255).astype(np.uint8)
+
+
+def main():
+    for sp in ("train", "val"):
+        os.makedirs(f"{OUT}/images/{sp}", exist_ok=True)
+        os.makedirs(f"{OUT}/labels/{sp}", exist_ok=True)
+    os.makedirs(f"{OUT}/preview", exist_ok=True)
+    if os.path.exists(DONE):
+        os.remove(DONE)
+
+    node = Node()
+    if not node.subscribe(Image, IMG_TOPIC, on_image):
+        raise SystemExit("image subscribe failed")
+    node.subscribe(Pose_V, DYN_TOPIC, on_pose)
+    if not wait_for(lambda: "p" in drone_pose, 10):
+        node.subscribe(Pose_V, POSE_TOPIC, on_pose)
+        if not wait_for(lambda: "p" in drone_pose, 15):
+            raise SystemExit("no drone pose received")
+    if not wait_for(lambda: img_state["img"] is not None, 60):
+        raise SystemExit("no camera frames")
+    tc, Rc = camera_pose()
+    print(f"camera at x={tc[0]:.2f} y={tc[1]:.2f} z={tc[2]:.2f} "
+          f"heading={math.degrees(math.atan2(Rc[1, 0], Rc[0, 0])):.1f} deg")
+    if tc[2] < 1.2:
+        raise SystemExit("drone is not hovering: run hover_for_dataset.py first")
+
+    cur = {g: (np.array(ORIG[g][:3]), ORIG[g][3]) for g in GATES}
+    skips = {"move": 0, "frame": 0, "unstable": 0, "ambiguous": 0, "coverage": 0}
+    covs, base, attempts, files, n_labels, n_empty = [], 0, 0, 0, 0, 0
+    prev_l, prev_n, t_start = 0, 0, time.time()
+    try:
+        while base < N_BASE and attempts < N_BASE * 6:
+            attempts += 1
+            tc, Rc = camera_pose()
+            cfg = make_config(tc, Rc)
+            changed = {g: v for g, v in cfg.items() if g not in cur or key(cur[g]) != key(v)}
+            if changed:
+                if not run_set_pose(changed):
+                    for g in changed:
+                        cur.pop(g, None)
+                    skips["move"] += 1
+                    continue
+                cur.update(changed)
+            tcA, RcA = camera_pose()
+            frame = grab_after(6)
+            if frame is None:
+                skips["frame"] += 1
+                continue
+            tcB, RcB = camera_pose()
+            if np.linalg.norm(tcB - tcA) > 0.03 or np.linalg.norm(RcB - RcA) > 0.012:
+                skips["unstable"] += 1
+                continue
+
+            H, W = frame.shape[:2]
+            bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            labeled, ambiguous = [], False
+            for g in GATES:
+                st, info = analyze(cur[g][0], cur[g][1], tcB, RcB, W, H)
+                if st == "ambiguous":
+                    ambiguous = True
+                    break
+                if st == "ok":
+                    labeled.append((g, info))
+            if ambiguous:
+                skips["ambiguous"] += 1
+                continue
+
+            hsv0 = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+            colored0 = (hsv0[..., 2] > 140) & (hsv0[..., 1] > 100)
+            masks, bad = [], False
+            for g, info in labeled:
+                m = bar_mask(cur[g][0], cur[g][1], tcB, RcB, W, H)
+                masks.append(m)
+                if info["depth"] <= 8 and info["frac"] >= 0.95 and (m > 0).any():
+                    cov = float(colored0[m > 0].mean())
+                    covs.append(cov)
+                    if cov < 0.5:
+                        bad = True
+            if bad:
+                skips["coverage"] += 1
+                continue
+
+            split = "val" if base % 7 == 0 else "train"
+            for v in range(VARIANTS if labeled else 2):
+                img = bgr if v == 0 else recolor(bgr, masks)
+                img = jitter(img)
+                boxes = [(((b[0] + b[2]) / 2) / W, ((b[1] + b[3]) / 2) / H,
+                          (b[2] - b[0]) / W, (b[3] - b[1]) / H)
+                         for b in (info["box"] for _, info in labeled)]
+                if rng.random() < 0.5:
+                    img = cv2.flip(img, 1)
+                    boxes = [(1 - cx, cy, bw, bh) for cx, cy, bw, bh in boxes]
+                small = cv2.resize(img, (W // 2, H // 2), interpolation=cv2.INTER_AREA)
+                name = f"w{base:04d}_{v}"
+                cv2.imwrite(f"{OUT}/images/{split}/{name}.jpg", small, [cv2.IMWRITE_JPEG_QUALITY, 92])
+                with open(f"{OUT}/labels/{split}/{name}.txt", "w") as f:
+                    for cx, cy, bw, bh in boxes:
+                        f.write(f"0 {cx:.6f} {cy:.6f} {bw:.6f} {bh:.6f}\n")
+                files += 1
+                n_labels += len(boxes)
+                if not boxes:
+                    n_empty += 1
+                if v < 2 and ((boxes and prev_l < 16) or (not boxes and prev_n < 3)):
+                    pv = small.copy()
+                    h_, w_ = pv.shape[:2]
+                    for cx, cy, bw, bh in boxes:
+                        cv2.rectangle(pv, (int((cx - bw / 2) * w_), int((cy - bh / 2) * h_)),
+                                      (int((cx + bw / 2) * w_), int((cy + bh / 2) * h_)), (0, 255, 0), 2)
+                    cv2.imwrite(f"{OUT}/preview/{name}.jpg", pv)
+                    if boxes:
+                        prev_l += 1
+                    else:
+                        prev_n += 1
+            base += 1
+            ds = ",".join(f"{info['depth']:.0f}" for _, info in labeled) or "-"
+            print(f"[{base}/{N_BASE}] gates={len(labeled)} depth(m)={ds} "
+                  f"({time.time() - t_start:.0f}s)", flush=True)
+    finally:
+        run_set_pose({g: (np.array(ORIG[g][:3]), ORIG[g][3]) for g in GATES})
+        with open(f"{OUT}/data.yaml", "w") as f:
+            f.write(f"path: {OUT}\ntrain: images/train\nval: images/val\nnames:\n  0: gate\n")
+        open(DONE, "w").close()
+        print(f"done: {base} base frames, {files} images, {n_labels} gate labels, "
+              f"{n_empty} empty images, {attempts} attempts")
+        print("skipped:", skips)
+        if covs:
+            print(f"mean color coverage {np.mean(covs):.2f} over {len(covs)} checks")
+
+
+main()
+EOF
+// What it does:
+//• Moves 0 to 3 gates to random positions, heights and angles in front of the hovering drone 
+//(some images have no gate at all, so the model learns that cyan/purple walls are not gates).
+//• Reads the drone pose from Gazebo and projects each gate's 3D frame into the image to get an exact bounding box (YOLO label format). 
+//Ambiguous cases (gate cut by the image edge, behind the camera) are skipped.
+//• Makes 4 variants per frame: random gate colors (including white and gray), brightness, noise, and horizontal flip. Colors are applied with a mask computed from geometry.
+//• Splits images into train/val (every 7th base frame goes to val), halves the resolution to 640×480 to save space, saves labeled previews, and always puts the gates back in their original places at the end.
+
+| Run order for dataset generation |
+//Terminal 1: clean start of the simulation.
+//Terminal 2 (drone-env): source ~/drone-env/bin/activate && python3 ~/autonomous-drone-racing/control/hover_for_dataset.py 10800 and wait for -- HOVERING.
+//Terminal 3 (vision-env): source ~/vision-env/bin/activate && cd ~/autonomous-drone-racing/vision && python3 gen_dataset_world.py 400
+//Check the labels visually: xdg-open ~/autonomous-drone-racing/dataset_world/preview — the green box must hug each gate's outer frame. If boxes are shifted, stop and fix the geometry before training.
+
+| Zip it for the Windows machine: |
+cd ~/autonomous-drone-racing
+rm -f ~/dataset_world.zip
+zip -rq ~/dataset_world.zip dataset_world
+ls -lh ~/dataset_world.zip
+//Upload dataset_world.zip to Google Drive from Firefox inside Ubuntu, then download it on Windows.
+
+| Train YOLO on Windows Powershell |
+//In my case im training it on my nividia gpu rtx 5050 so i needed PyTorch build for CUDA 12.8
+winget install -e --id Python.Python.3.12
+//close Powershell, open it again, then: 
+python --version
+mkdir C:/yolo
+cd C:/yolo
+python -m venv env
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+./env/Scripts/Activate.ps1
+python -m pip install --upgrade pip
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+//What it does: installs Python 3.12 and a separate training environment with the CUDA 12.8 build of PyTorch.
+// for further information check with AI
+
+| GPU check |
+@"
+import torch
+print(torch.__version__, torch.cuda.is_available())
+print(torch.cuda.get_device_name(0))
+print(torch.cuda.get_arch_list())
+x = torch.randn(2000, 2000, device="cuda")
+print("matmul ok", (x @ x).sum().item())
+"@ | Set-Content C:/yolo/check_gpu.py
+python C:/yolo/check_gpu.py
+pip install ultralytics
+python C:/yolo/check_gpu.py
+//What it does: confirms PyTorch sees the GPU and can run a real computation on it (success = True, the GPU name, sm_120 in the list, and matmul ok). 
+//The second run checks that installing ultralytics did not replace PyTorch.
+  
+| Unpack the dataset and train: |
+//After you download the zip file for google drive on your windows do this.
+Expand-Archive "$env:USERPROFILE/Downloads/dataset_world.zip" -DestinationPath C:/yolo -Force
+@"
+path: C:/yolo/dataset_world
+train: images/train
+val: images/val
+names:
+  0: gate
+"@ | Set-Content -Encoding ascii C:/yolo/dataset_world/data.yaml
+(Get-ChildItem C:/yolo/dataset_world/images/train).Count
+(Get-ChildItem C:/yolo/dataset_world/images/val).Count
+yolo detect train data=C:/yolo/dataset_world/data.yaml model=yolov8n.pt epochs=50 imgsz=640 batch=16 workers=2 device=0 project=C:/yolo/runs name=gate_world exist_ok=True patience=15
+
+| Export to ONNX: |
+yolo export model=C:/yolo/runs/gate_world/weights/best.pt format=onnx imgsz=640 opset=12 simplify=False
+Copy-Item C:/yolo/runs/gate_world/weights/best.onnx C:/yolo/gate_world.onnx
+Get-FileHash C:/yolo/gate_world.onnx -Algorithm MD5
+//What it does: converts the PyTorch weights to ONNX so Ubuntu can run them with onnxruntime without PyTorch. We copy it under a unique name (gate_world.onnx) and print its MD5 hash so you can confirm Ubuntu received the right file
+//Upload gate_world.onnx to Google Drive and download it in Ubuntu.
+
+|  Run YOLO in Ubuntu |
+
+|  Install the model and the detector (vision-env) |
+cd ~/autonomous-drone-racing/vision
+cp ~/Downloads/gate_world.onnx gate_yolo.onnx
+md5sum gate_yolo.onnx
+
+//The MD5 must match the one printed on Windows.
+
+cat > ~/autonomous-drone-racing/vision/yolo_detector.py << 'EOF'
+import os
+import sys
+import time
+import numpy as np
+import cv2
+
+MODEL = os.path.expanduser("~/autonomous-drone-racing/vision/gate_yolo.onnx")
+IMGSZ = 640
+CONF_T = 0.40
+IOU_T = 0.5
+
+_state = {"mode": None, "sess": None, "net": None}
+
+
+def _load():
+    if _state["mode"]:
+        return
+    try:
+        import onnxruntime as ort
+        _state["sess"] = ort.InferenceSession(MODEL, providers=["CPUExecutionProvider"])
+        _state["mode"] = "onnxruntime"
+    except Exception:
+        _state["net"] = cv2.dnn.readNetFromONNX(MODEL)
+        _state["mode"] = "cv2.dnn"
+
+
+def _letterbox(bgr):
+    h, w = bgr.shape[:2]
+    r = IMGSZ / max(h, w)
+    nw, nh = int(round(w * r)), int(round(h * r))
+    small = cv2.resize(bgr, (nw, nh))
+    left, top = (IMGSZ - nw) // 2, (IMGSZ - nh) // 2
+    canvas = np.full((IMGSZ, IMGSZ, 3), 114, np.uint8)
+    canvas[top:top + nh, left:left + nw] = small
+    return canvas, r, left, top
+
+
+def _infer(canvas):
+    blob = canvas[..., ::-1].astype(np.float32) / 255.0
+    blob = np.ascontiguousarray(blob.transpose(2, 0, 1)[None])
+    if _state["mode"] == "onnxruntime":
+        s = _state["sess"]
+        return s.run(None, {s.get_inputs()[0].name: blob})[0]
+    _state["net"].setInput(blob)
+    return _state["net"].forward()
+
+
+def _nms(boxes, scores, thr):
+    order = np.argsort(-scores)
+    keep = []
+    while len(order):
+        i = order[0]
+        keep.append(int(i))
+        rest = order[1:]
+        if len(rest) == 0:
+            break
+        x1 = np.maximum(boxes[i, 0], boxes[rest, 0])
+        y1 = np.maximum(boxes[i, 1], boxes[rest, 1])
+        x2 = np.minimum(boxes[i, 0] + boxes[i, 2], boxes[rest, 0] + boxes[rest, 2])
+        y2 = np.minimum(boxes[i, 1] + boxes[i, 3], boxes[rest, 1] + boxes[rest, 3])
+        inter = np.clip(x2 - x1, 0, None) * np.clip(y2 - y1, 0, None)
+        union = boxes[i, 2] * boxes[i, 3] + boxes[rest, 2] * boxes[rest, 3] - inter
+        order = rest[inter / np.maximum(union, 1e-9) < thr]
+    return keep
+
+
+def detect_all(bgr):
+    """All gates after NMS: list of (x, y, w, h, conf) in original image pixels"""
+    _load()
+    H, W = bgr.shape[:2]
+    canvas, r, left, top = _letterbox(bgr)
+    out = np.squeeze(np.asarray(_infer(canvas)), 0)
+    if out.shape[-1] == 6:                       # built-in NMS: x1,y1,x2,y2,score,cls
+        rows = out[out[:, 4] >= CONF_T]
+        if len(rows) == 0:
+            return []
+        boxes = np.array([[a, b, c - a, d - b] for a, b, c, d in rows[:, :4]])
+    else:                                        # cx,cy,w,h,score
+        if out.shape[0] < out.shape[1]:
+            out = out.T
+        rows = out[out[:, 4] >= CONF_T]
+        if len(rows) == 0:
+            return []
+        boxes = np.array([[cx - w / 2, cy - h / 2, w, h] for cx, cy, w, h in rows[:, :4]])
+    scores = rows[:, 4]
+    res = []
+    for i in _nms(boxes, scores, IOU_T):
+        x, y, bw, bh = boxes[i]
+        x1 = max(0.0, (x - left) / r)
+        y1 = max(0.0, (y - top) / r)
+        x2 = min(float(W), (x + bw - left) / r)
+        y2 = min(float(H), (y + bh - top) / r)
+        if x2 - x1 > 1 and y2 - y1 > 1:
+            res.append((float(x1), float(y1), float(x2 - x1), float(y2 - y1), float(scores[i])))
+    return res
+
+
+def detect(bgr):
+    """Target = nearest gate (largest box). Returns (info, None)."""
+    H, W = bgr.shape[:2]
+    gates = detect_all(bgr)
+    if not gates:
+        return {"detected": False, "cx": 0.0, "cy": 0.0, "w_frac": 0.0,
+                "h_frac": 0.0, "conf": 0.0, "box": None, "n_gates": 0}, None
+    x1, y1, bw, bh, conf = max(gates, key=lambda g: g[2] * g[3])
+    return {
+        "detected": True,
+        "cx": float(((x1 + bw / 2) - W / 2) / (W / 2)),
+        "cy": float(((y1 + bh / 2) - H / 2) / (H / 2)),
+        "w_frac": float(bw / W),
+        "h_frac": float(bh / H),
+        "conf": conf,
+        "box": (int(x1), int(y1), int(bw), int(bh)),
+        "n_gates": len(gates),
+    }, None
+
+
+if __name__ == "__main__":
+    path = sys.argv[1] if len(sys.argv) > 1 else "/tmp/frame.png"
+    bgr = cv2.imread(path)
+    if bgr is None:
+        raise SystemExit("cannot read " + path)
+    detect(bgr)
+    t = time.time()
+    for _ in range(5):
+        info, _ = detect(bgr)
+    ms = (time.time() - t) / 5 * 1000
+    print("backend:", _state["mode"], f"| {ms:.0f} ms/frame")
+    gates = detect_all(bgr)
+    print("gates found:", len(gates))
+    for g in sorted(gates, key=lambda g: -g[2] * g[3]):
+        print("  box=(%d,%d,%d,%d) conf=%.2f" % (g[0], g[1], g[2], g[3], g[4]))
+    print("target:", {k: (round(v, 3) if isinstance(v, float) else v) for k, v in info.items()})
+    for g in gates:
+        x, y, w, h, _c = [int(v) for v in g]
+        cv2.rectangle(bgr, (x, y), (x + w, y + h), (0, 255, 255), 2)
+    if info["box"]:
+        x, y, w, h = info["box"]
+        cv2.rectangle(bgr, (x, y), (x + w, y + h), (0, 255, 0), 4)
+    cv2.imwrite("/tmp/yolo_detected.png", bgr)
+    print("saved /tmp/yolo_detected.png")
+EOF
+
+| Test on the drone sitting on the ground in the running simulation: |
+source ~/vision-env/bin/activate
+cd ~/autonomous-drone-racing/vision
+python3 grab_frame.py
+python3 yolo_detector.py /tmp/frame.png
+xdg-open /tmp/yolo_detected.png
+//What it does: this is the bridge between the two Python environments. It reads every new camera frame, runs YOLO, and sends the result
+// The controller, running in drone-env, reads those messages. Keep it running in its own terminal. On the ground it should print detected=True ... w=0.12.
+
+| The baseline race controller (drone-env) |
+//This is a hand-written controller, not a learned one. It is our reference to compare PPO against.
+cat > ~/autonomous-drone-racing/control/race_controller.py << 'EOF'
+import asyncio
+import json
+import math
+import os
+import socket
+import time
+from mavsdk import System
+from mavsdk.offboard import OffboardError, VelocityBodyYawspeed
+
+# ---------- settings (starting values, tune after testing) ----------
+TARGET_ALT = 2.0
+V_MAX = float(os.environ.get("V_MAX", "1.0"))
+MAX_GATES = int(os.environ.get("MAX_GATES", "99"))
+V_SEARCH = 0.5
+K_YAW = 30.0
+K_Z = 1.0
+V_Z_MAX = 0.8
+COMMIT_W = 0.45        # gate width in image that triggers the final dash (~3.5 m)
+COMMIT_DIST = 4.5      # straight-through distance after commit
+LOOP_HZ = 20
+STALE_S = 1.0
+MIN_CONF = 0.5
+FIRST_GATE_TIMEOUT = 20.0
+LOST_FINISH_S = 25.0
+TOTAL_TIMEOUT = 1500.0
+
+# gate positions of the current world: used only to SCORE a run afterwards
+REF = [(14.0, 0.0, 2.25), (28.0, 1.5, 3.35), (42.0, -1.45, 2.05),
+       (56.0, 1.8, 3.65), (70.0, -0.5, 2.55)]
+
+
+def clamp(x, lo, hi):
+    return max(lo, min(hi, x))
+
+
+class GateFeed:
+    """Receives vision results over UDP from vision_server_yolo.py"""
+
+    def __init__(self, port=5005):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(("127.0.0.1", port))
+        self.sock.setblocking(False)
+        self.info = None
+
+    def fresh(self):
+        while True:
+            try:
+                data, _ = self.sock.recvfrom(4096)
+            except BlockingIOError:
+                break
+            self.info = json.loads(data)
+        i = self.info
+        if (i is None or not i["detected"] or i["conf"] < MIN_CONF
+                or time.time() - i["t"] > STALE_S):
+            return None
+        return i
+
+
+async def track_position(drone, pos):
+    async for pv in drone.telemetry.position_velocity_ned():
+        pos["n"] = pv.position.north_m
+        pos["e"] = pv.position.east_m
+        pos["d"] = pv.position.down_m
+
+
+async def land(drone):
+    try:
+        await drone.offboard.stop()
+    except OffboardError:
+        pass
+    await drone.action.land()
+
+    async def wait_ground():
+        async for in_air in drone.telemetry.in_air():
+            if not in_air:
+                return
+    try:
+        await asyncio.wait_for(wait_ground(), 180)
+    except asyncio.TimeoutError:
+        print("landing timeout")
+
+
+def check_pass(k, samples):
+    """Rough score: where was the drone when it crossed gate k's plane"""
+    if k >= len(REF):
+        return None
+    gx, gy, gz = REF[k]
+    for n, e, alt in samples:
+        if e >= gx:
+            dn, dz = n - gy, alt - gz
+            return (dn, dz, abs(dn) < 1.4 and abs(dz) < 1.1)
+    return "no_plane"
+
+
+async def run():
+    feed = GateFeed()
+    drone = System()
+    await drone.connect(system_address="udpin://0.0.0.0:14540")
+    async for state in drone.core.connection_state():
+        if state.is_connected:
+            print("-- Connected")
+            break
+    async for health in drone.telemetry.health():
+        if health.is_global_position_ok and health.is_home_position_ok:
+            break
+
+    pos = {}
+    tracker = asyncio.create_task(track_position(drone, pos))
+    wall0 = time.time()
+    try:
+        print("-- Arming / Taking off")
+        await drone.action.arm()
+        await drone.action.takeoff()
+        t0 = time.time()
+        while -pos.get("d", 0.0) < TARGET_ALT:
+            if time.time() - t0 > 150:
+                print("-- Takeoff timeout")
+                return
+            await asyncio.sleep(0.2)
+        print("-- At altitude, starting offboard")
+
+        await drone.offboard.set_velocity_body(VelocityBodyYawspeed(0, 0, 0, 0))
+        try:
+            await drone.offboard.start()
+        except OffboardError as e:
+            print(f"Offboard failed: {e._result.result}")
+            return
+
+        n0, e0 = pos["n"], pos["e"]
+        phase, passed, commit_from = "approach", 0, None
+        samples, checks = [], []
+        sm = {"t": 0.0, "n": 0, "cx": 0.0, "cy": 0.0, "w": 0.0}
+        last_seen = time.time()
+        t_race, last_log, dt = time.time(), 0.0, 1.0 / LOOP_HZ
+        reason = "timeout"
+
+        while time.time() - t_race < TOTAL_TIMEOUT:
+            now = time.time()
+            cmd = (0.0, 0.0, 0.0, 0.0)
+            if phase == "approach":
+                info = feed.fresh()
+                if info is None:
+                    sm["n"] = 0
+                    lost = now - last_seen
+                    if passed == 0 and lost > FIRST_GATE_TIMEOUT:
+                        reason = "no gate found at start"
+                        break
+                    if passed > 0 and lost > LOST_FINISH_S:
+                        reason = "no more gates"
+                        break
+                    if passed > 0 and lost > 2.0:
+                        cmd = (V_SEARCH, 0.0, 0.0, 0.0)
+                else:
+                    last_seen = now
+                    if info["t"] != sm["t"]:
+                        a = 1.0 if sm["n"] == 0 else 0.5
+                        sm["cx"] += a * (info["cx"] - sm["cx"])
+                        sm["cy"] += a * (info["cy"] - sm["cy"])
+                        sm["w"] += a * (info["w_frac"] - sm["w"])
+                        sm["t"] = info["t"]
+                        sm["n"] += 1
+                    cx, cy, w = sm["cx"], sm["cy"], sm["w"]
+                    aligned = abs(cx) < 0.12 and abs(cy) < 0.2
+                    if w >= COMMIT_W and aligned:
+                        phase = "commit"
+                        commit_from = (pos["n"], pos["e"])
+                        samples = []
+                        print(f"-- COMMIT gate {passed + 1}: w={w:.2f} cx={cx:.2f} cy={cy:.2f}")
+                        cmd = (V_MAX, 0.0, 0.0, 0.0)
+                    else:
+                        slow = max(0.2, 1.0 - 2.0 * max(abs(cx), abs(cy)))
+                        if w >= COMMIT_W:
+                            slow = min(slow, 0.2)
+                        cmd = (V_MAX * slow, 0.0,
+                               clamp(K_Z * cy, -V_Z_MAX, V_Z_MAX), K_YAW * cx)
+                    if now - last_log > 1.0:
+                        last_log = now
+                        print(f"approach cx={cx:.2f} cy={cy:.2f} w={w:.2f} "
+                              f"n_gates={info.get('n_gates', '?')} alt={-pos['d']:.2f}")
+            else:
+                samples.append((pos["n"] - n0, pos["e"] - e0, -pos["d"]))
+                dist = math.hypot(pos["n"] - commit_from[0], pos["e"] - commit_from[1])
+                cmd = (V_MAX, 0.0, 0.0, 0.0)
+                if dist >= COMMIT_DIST:
+                    passed += 1
+                    checks.append(check_pass(passed - 1, samples))
+                    print(f"-- Gate {passed} passed after {dist:.1f} m")
+                    phase, last_seen, sm["n"] = "approach", now, 0
+                    cmd = (0.0, 0.0, 0.0, 0.0)
+                    if passed >= MAX_GATES:
+                        reason = "reached MAX_GATES"
+                        break
+
+            await drone.offboard.set_velocity_body(VelocityBodyYawspeed(*cmd))
+            await asyncio.sleep(dt)
+
+        await drone.offboard.set_velocity_body(VelocityBodyYawspeed(0, 0, 0, 0))
+        print(f"\n-- Finished: {reason}; gates passed (by controller): {passed}")
+        ok_all = True
+        for k, c in enumerate(checks):
+            if c is None:
+                print(f"   gate {k + 1}: no reference position")
+            elif c == "no_plane":
+                print(f"   gate {k + 1}: never crossed the reference plane")
+                ok_all = False
+            else:
+                print(f"   gate {k + 1}: dn={c[0]:+.2f} m  dz={c[1]:+.2f} m  "
+                      f"{'OK' if c[2] else 'MISS'}")
+                ok_all = ok_all and c[2]
+        need = min(MAX_GATES, len(REF))
+        success = passed >= need and ok_all
+        print(f"-- RESULT: {'SUCCESS' if success else 'FAIL'} "
+              f"(passed {passed}/{need}, V_MAX={V_MAX})")
+        rdir = os.path.expanduser("~/autonomous-drone-racing/results")
+        os.makedirs(rdir, exist_ok=True)
+        with open(os.path.join(rdir, "race_runs.csv"), "a") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')},{passed},{need},"
+                    f"{int(success)},{V_MAX},{time.time() - wall0:.0f},{reason}\n")
+        print("-- Landing")
+        await land(drone)
+        print("Done")
+    finally:
+        tracker.cancel()
+
+
+asyncio.run(run())
+EOF
+
+// Thats not all, the PPO plan is not yet built
+
+  
+  
